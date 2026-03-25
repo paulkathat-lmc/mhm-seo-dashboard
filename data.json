@@ -1,0 +1,206 @@
+{
+  "lastUpdated": "2026-03-25",
+  "dailySummaries": [
+    {
+      "date": "2026-02-20",
+      "totalUrls": 378,
+      "indexed": 355,
+      "indexedPct": 93.9,
+      "notIndexed": 23,
+      "impressions": 12670,
+      "clicks": 193,
+      "avgPosition": 9.79,
+      "urlsInTop3": 26,
+      "citiesInTop20": 13,
+      "citiesAvgRank": 32,
+      "deindexedCount": 0,
+      "cities": {
+        "Orlando": 0,
+        "San Antonio": 0,
+        "Houston": 11.20,
+        "Fayetteville": 42.86
+      }
+    },
+    {
+      "date": "2026-02-23",
+      "totalUrls": 378,
+      "indexed": 357,
+      "indexedPct": 94.4,
+      "notIndexed": 21,
+      "impressions": 13492,
+      "clicks": 212,
+      "avgPosition": 9.34,
+      "urlsInTop3": 33,
+      "citiesInTop20": 21,
+      "citiesAvgRank": 27.07,
+      "deindexedCount": 0,
+      "cities": {
+        "Orlando": 0,
+        "San Antonio": 0,
+        "Houston": 11.20,
+        "Fayetteville": 42.86
+      }
+    },
+    {
+      "date": "2026-02-25",
+      "totalUrls": 378,
+      "indexed": 357,
+      "indexedPct": 94.4,
+      "notIndexed": 21,
+      "impressions": 14200,
+      "clicks": 230,
+      "avgPosition": 9.36,
+      "urlsInTop3": 31,
+      "citiesInTop20": 22,
+      "citiesAvgRank": 26.19,
+      "deindexedCount": 0,
+      "cities": {
+        "Orlando": 0,
+        "San Antonio": 0,
+        "Houston": 11.20,
+        "Fayetteville": 42.86
+      }
+    },
+    {
+      "date": "2026-03-04",
+      "totalUrls": 589,
+      "indexed": 438,
+      "indexedPct": 74.4,
+      "notIndexed": 151,
+      "impressions": 22000,
+      "clicks": 450,
+      "avgPosition": 9.70,
+      "urlsInTop3": 20,
+      "citiesInTop20": 43,
+      "citiesAvgRank": 22.00,
+      "deindexedCount": 0,
+      "cities": {
+        "Orlando": 6.18,
+        "San Antonio": 8.87,
+        "Houston": 18.94,
+        "Fayetteville": 34.24
+      }
+    },
+    {
+      "date": "2026-03-19",
+      "totalUrls": 608,
+      "indexed": 456,
+      "indexedPct": 75.0,
+      "notIndexed": 152,
+      "impressions": 27219,
+      "clicks": 584,
+      "avgPosition": 9.74,
+      "urlsInTop3": 25,
+      "citiesInTop20": 43,
+      "citiesAvgRank": 20.37,
+      "deindexedCount": 0,
+      "cities": {
+        "Orlando": 5.86,
+        "San Antonio": 8.87,
+        "Houston": 18.94,
+        "Fayetteville": 34.24
+      }
+    },
+    {
+      "date": "2026-03-20",
+      "totalUrls": 624,
+      "indexed": 458,
+      "indexedPct": 73.4,
+      "notIndexed": 166,
+      "impressions": 28932,
+      "clicks": 619,
+      "avgPosition": 9.64,
+      "urlsInTop3": 20,
+      "citiesInTop20": 43,
+      "citiesAvgRank": 20.04,
+      "deindexedCount": 0,
+      "cities": {
+        "Orlando": 5.86,
+        "San Antonio": 8.87,
+        "Houston": 18.94,
+        "Fayetteville": 34.24
+      }
+    },
+    {
+      "date": "2026-03-23",
+      "totalUrls": 624,
+      "indexed": 460,
+      "indexedPct": 73.7,
+      "notIndexed": 164,
+      "impressions": 31029,
+      "clicks": 679,
+      "avgPosition": 9.57,
+      "urlsInTop3": 18,
+      "citiesInTop20": 43,
+      "citiesAvgRank": 20.69,
+      "deindexedCount": 2,
+      "deindexedUrls": [
+        "https://www.localmovers.com/mobile-home-mover/mason-mobile-home-and-trucking",
+        "https://www.localmovers.com/mobile-home-mover/barrett-mobile-home-transport"
+      ],
+      "cities": {
+        "Orlando": 6.02,
+        "San Antonio": 8.36,
+        "Houston": 20.02,
+        "Fayetteville": 32.69
+      }
+    },
+    {
+      "date": "2026-03-24",
+      "totalUrls": 624,
+      "indexed": 458,
+      "indexedPct": 73.4,
+      "notIndexed": 166,
+      "impressions": 31029,
+      "clicks": 679,
+      "avgPosition": 9.57,
+      "urlsInTop3": 18,
+      "citiesInTop20": 43,
+      "citiesAvgRank": 21.93,
+      "deindexedCount": 2,
+      "cities": {
+        "Orlando": 6.02,
+        "San Antonio": 8.48,
+        "Houston": 20.02,
+        "Fayetteville": 32.11
+      }
+    },
+    {
+      "date": "2026-03-25",
+      "totalUrls": 624,
+      "indexed": 460,
+      "indexedPct": 73.7,
+      "notIndexed": 164,
+      "impressions": 31387,
+      "clicks": 684,
+      "avgPosition": 9.55,
+      "urlsInTop3": 18,
+      "citiesInTop20": 42,
+      "citiesAvgRank": 21.31,
+      "deindexedCount": 4,
+      "deindexedUrls": [
+        "https://www.localmovers.com/mobile-home-mover/hudson-mobile-home-movers",
+        "https://www.localmovers.com/mobile-home-mover/ganda-housemovers-and-demolition-and-mobilehomes",
+        "https://www.localmovers.com/mobile-home-mover/wolfe-creek-trucking",
+        "https://www.localmovers.com/mobile-home-mover/hughes-hauling-llc"
+      ],
+      "cities": {
+        "Orlando": 6.02,
+        "San Antonio": 8.42,
+        "Houston": 20.65,
+        "Fayetteville": 32.40,
+        "Baton Rouge": 0,
+        "Texarkana": 0,
+        "Shreveport": 0,
+        "Lafayette": 0,
+        "Lake Charles": 0,
+        "Seattle": 0,
+        "Oklahoma City": 0,
+        "Alexandria": 0,
+        "Youngsville": 0,
+        "Los Angeles": 0,
+        "Albuquerque": 0
+      }
+    }
+  ]
+}

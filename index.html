@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Home Movers - SEO Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #3b82f6;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --header-bg: #1a365d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px;
+            min-height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 { font-size: 1.5rem; font-weight: 700; }
+        .header .subtitle { color: var(--muted); font-size: 0.875rem; }
+        .date-badge {
+            background: var(--accent);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        /* Two-column summary layout matching the Google Sheet */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .summary-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary-table th,
+        .summary-table td {
+            padding: 10px 16px;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .summary-table thead th {
+            background: var(--header-bg);
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-align: left;
+        }
+        .summary-table tbody tr:last-child td { border-bottom: none; }
+        .summary-table .metric-name {
+            font-weight: 600;
+            color: var(--text);
+        }
+        .summary-table .metric-value {
+            text-align: right;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .summary-table .metric-change {
+            text-align: right;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .change-up { color: var(--green); }
+        .change-down { color: var(--red); }
+        .change-neutral { color: var(--muted); }
+        /* For position metrics, down is good (lower position = better) */
+        .change-up-bad { color: var(--red); }
+        .change-down-good { color: var(--green); }
+
+        .section-header td {
+            background: #334155;
+            font-weight: 700 !important;
+            color: var(--orange) !important;
+            font-size: 0.8rem !important;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 8px 16px !important;
+        }
+
+        .deindexed-url td {
+            padding: 6px 16px !important;
+            font-size: 0.8rem;
+        }
+        .deindexed-url a {
+            color: var(--accent);
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .deindexed-url a:hover { text-decoration: underline; }
+
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .chart-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .chart-card h3 {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            color: var(--muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            body { padding: 12px; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        @media print {
+            body { background: white; color: #111; padding: 12px; }
+            .summary-card, .chart-card { border: 1px solid #ccc; }
+            .summary-table thead th { background: #2c5282; }
+            .section-header td { background: #e2e8f0; color: #1a202c !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Mobile Home Movers - SEO Dashboard</h1>
+            <div class="subtitle">localmovers.com/mobile-home-mover</div>
+        </div>
+        <div class="date-badge" id="dateLabel">Loading...</div>
+    </div>
+
+    <!-- Two-column summary matching Daily Summary sheet -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <table class="summary-table" id="kpiTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th id="kpiDate" style="text-align:right"></th>
+                        <th id="kpiChange" style="text-align:right"></th>
+                    </tr>
+                </thead>
+                <tbody id="kpiBody"></tbody>
+            </table>
+        </div>
+        <div class="summary-card">
+            <table class="summary-table" id="cityTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th id="cityDate" style="text-align:right"></th>
+                        <th id="cityChange" style="text-align:right"></th>
+                    </tr>
+                </thead>
+                <tbody id="cityBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Trend Charts -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>Impressions & Clicks Over Time</h3>
+            <canvas id="impressionsChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Average Position Over Time</h3>
+            <canvas id="positionChart"></canvas>
+        </div>
+    </div>
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>Indexed vs Not Indexed URLs</h3>
+            <canvas id="indexChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>City Rankings (Lower = Better)</h3>
+            <canvas id="cityChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+    function fmtDate(dateStr) {
+        return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+    }
+
+    function changeCell(current, previous, invert) {
+        const diff = current - previous;
+        if (Math.abs(diff) < 0.005) return `<td class="metric-change change-neutral">\u2194\ufe0f</td>`;
+        const arrow = diff > 0 ? '\u2191' : '\u2193';
+        let cls;
+        if (invert) {
+            cls = diff < 0 ? 'change-down-good' : 'change-up-bad';
+        } else {
+            cls = diff > 0 ? 'change-up' : 'change-down';
+        }
+        const display = Math.abs(diff) >= 1 ? Math.abs(Math.round(diff)).toLocaleString() : Math.abs(diff).toFixed(2);
+        return `<td class="metric-change ${cls}">${arrow} ${display}</td>`;
+    }
+
+    async function loadDashboard() {
+        const resp = await fetch('data.json');
+        const data = await resp.json();
+        const days = data.dailySummaries;
+        const latest = days[days.length - 1];
+        const prev = days[days.length - 2];
+
+        // Header
+        document.getElementById('dateLabel').textContent =
+            `Report: ${new Date(latest.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+
+        // Left table headers
+        document.getElementById('kpiDate').textContent = fmtDate(latest.date);
+        document.getElementById('kpiChange').textContent = `Change from ${fmtDate(prev.date)}`;
+        document.getElementById('cityDate').textContent = fmtDate(latest.date);
+        document.getElementById('cityChange').textContent = `Change from ${fmtDate(prev.date)}`;
+
+        // Left table: KPI rows
+        const kpiRows = [
+            { name: 'Total URLs processed', val: latest.totalUrls, prev: prev.totalUrls },
+            { name: 'Indexed (movers)', val: `${latest.indexed} (${latest.indexedPct}%)`, rawVal: latest.indexed, rawPrev: prev.indexed },
+            { name: 'Not indexed', val: latest.notIndexed, prev: prev.notIndexed, invert: true },
+            { name: 'Total Impressions', val: latest.impressions.toLocaleString(), rawVal: latest.impressions, rawPrev: prev.impressions },
+            { name: 'Total Clicks', val: latest.clicks.toLocaleString(), rawVal: latest.clicks, rawPrev: prev.clicks },
+            { name: 'Average Position', val: latest.avgPosition.toFixed(2), rawVal: latest.avgPosition, rawPrev: prev.avgPosition, invert: true },
+            { name: 'Number of URLs in Top 3', val: latest.urlsInTop3, prev: prev.urlsInTop3 },
+            { name: 'Cities in Top 20', val: latest.citiesInTop20, prev: prev.citiesInTop20 },
+            { name: 'Cities Average Rank', val: latest.citiesAvgRank.toFixed(2), rawVal: latest.citiesAvgRank, rawPrev: prev.citiesAvgRank, invert: true },
+        ];
+
+        const kpiBody = document.getElementById('kpiBody');
+        kpiRows.forEach(row => {
+            const rv = row.rawVal !== undefined ? row.rawVal : row.val;
+            const rp = row.rawPrev !== undefined ? row.rawPrev : row.prev;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="metric-name">${row.name}</td>
+                <td class="metric-value">${row.val}</td>
+                ${changeCell(rv, rp, row.invert)}
+            `;
+            kpiBody.appendChild(tr);
+        });
+
+        // Index Drop-Offs section
+        const sectionRow = document.createElement('tr');
+        sectionRow.className = 'section-header';
+        sectionRow.innerHTML = `<td colspan="3">Index Drop-Offs</td>`;
+        kpiBody.appendChild(sectionRow);
+
+        const deindexRow = document.createElement('tr');
+        deindexRow.innerHTML = `
+            <td class="metric-name">Count of Deindexed URLs</td>
+            <td class="metric-value">${latest.deindexedCount}</td>
+            ${changeCell(latest.deindexedCount, prev.deindexedCount, true)}
+        `;
+        kpiBody.appendChild(deindexRow);
+
+        if (latest.deindexedUrls) {
+            latest.deindexedUrls.forEach(url => {
+                const tr = document.createElement('tr');
+                tr.className = 'deindexed-url';
+                const slug = url.split('/').pop().replace(/-/g, ' ');
+                tr.innerHTML = `<td colspan="3"><a href="${url}" target="_blank">${url}</a></td>`;
+                kpiBody.appendChild(tr);
+            });
+        }
+
+        // Right table: City positions
+        const cityBody = document.getElementById('cityBody');
+        const allCities = [
+            'Orlando', 'San Antonio', 'Houston', 'Fayetteville',
+            'Baton Rouge', 'Texarkana', 'Shreveport', 'Lafayette',
+            'Lake Charles', 'Seattle', 'Oklahoma City', 'Alexandria',
+            'Youngsville', 'Los Angeles', 'Albuquerque'
+        ];
+
+        allCities.forEach(city => {
+            const pos = latest.cities[city] !== undefined ? latest.cities[city] : 0;
+            const prevPos = prev.cities && prev.cities[city] !== undefined ? prev.cities[city] : 0;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="metric-name">${city} Avg Pos</td>
+                <td class="metric-value">${pos > 0 ? pos.toFixed(2) : '0'}</td>
+                ${pos > 0 && prevPos > 0 ? changeCell(pos, prevPos, true) : `<td class="metric-change change-neutral">\u2194\ufe0f</td>`}
+            `;
+            cityBody.appendChild(tr);
+        });
+
+        // ============ CHARTS ============
+        const labels = days.map(d => {
+            const dt = new Date(d.date + 'T00:00:00');
+            return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+
+        // Impressions & Clicks
+        new Chart(document.getElementById('impressionsChart'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Impressions',
+                        data: days.map(d => d.impressions),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59,130,246,0.1)',
+                        fill: true, tension: 0.3, yAxisID: 'y'
+                    },
+                    {
+                        label: 'Clicks',
+                        data: days.map(d => d.clicks),
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34,197,94,0.1)',
+                        fill: true, tension: 0.3, yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { type: 'linear', position: 'left', ticks: { color: '#3b82f6' }, grid: { color: '#334155' }, title: { display: true, text: 'Impressions', color: '#3b82f6' } },
+                    y1: { type: 'linear', position: 'right', ticks: { color: '#22c55e' }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Clicks', color: '#22c55e' } }
+                }
+            }
+        });
+
+        // Average Position
+        new Chart(document.getElementById('positionChart'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Avg Position',
+                    data: days.map(d => d.avgPosition),
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245,158,11,0.1)',
+                    fill: true, tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { reverse: true, ticks: { color: '#f59e0b' }, grid: { color: '#334155' }, title: { display: true, text: 'Position (lower = better)', color: '#f59e0b' } }
+                }
+            }
+        });
+
+        // Indexed vs Not Indexed
+        new Chart(document.getElementById('indexChart'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Indexed', data: days.map(d => d.indexed), backgroundColor: '#22c55e' },
+                    { label: 'Not Indexed', data: days.map(d => d.notIndexed), backgroundColor: '#ef4444' }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { stacked: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { stacked: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+
+        // City Rankings bar
+        const activeCities = Object.entries(latest.cities).filter(([, v]) => v > 0);
+        new Chart(document.getElementById('cityChart'), {
+            type: 'bar',
+            data: {
+                labels: activeCities.map(([c]) => c),
+                datasets: [{
+                    label: 'Avg Position',
+                    data: activeCities.map(([, v]) => v),
+                    backgroundColor: activeCities.map(([, v]) => v <= 10 ? '#22c55e' : v <= 20 ? '#f59e0b' : '#ef4444'),
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, title: { display: true, text: 'Avg Position', color: '#94a3b8' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    loadDashboard();
+    </script>
+</body>
+</html>
