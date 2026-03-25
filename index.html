@@ -308,12 +308,13 @@
 
         allCities.forEach(city => {
             const pos = latest.cities[city] !== undefined ? latest.cities[city] : 0;
+            if (pos === 0) return; // Skip cities with no ranking
             const prevPos = prev.cities && prev.cities[city] !== undefined ? prev.cities[city] : 0;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="metric-name">${city} Avg Pos</td>
-                <td class="metric-value">${pos > 0 ? pos.toFixed(2) : '0'}</td>
-                ${pos > 0 && prevPos > 0 ? changeCell(pos, prevPos, true) : `<td class="metric-change change-neutral">\u2194\ufe0f</td>`}
+                <td class="metric-value">${pos.toFixed(2)}</td>
+                ${prevPos > 0 ? changeCell(pos, prevPos, true) : `<td class="metric-change change-neutral">\u2194\ufe0f</td>`}
             `;
             cityBody.appendChild(tr);
         });
