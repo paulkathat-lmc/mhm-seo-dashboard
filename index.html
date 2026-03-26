@@ -36,6 +36,7 @@
         }
         .header h1 { font-size: 1.5rem; font-weight: 700; }
         .header .subtitle { color: var(--muted); font-size: 0.875rem; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
         .date-badge {
             background: var(--accent);
             color: white;
@@ -43,6 +44,25 @@
             border-radius: 20px;
             font-size: 0.875rem;
             font-weight: 600;
+        }
+        .live-badge {
+            background: var(--green);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .last-updated {
+            color: var(--muted);
+            font-size: 0.75rem;
         }
 
         /* Two-column summary layout matching the Google Sheet */
@@ -138,6 +158,27 @@
             color: var(--muted);
         }
 
+        /* Loading state */
+        .loading-overlay {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            gap: 16px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: var(--muted); font-size: 0.9rem; }
+        .error-msg { color: var(--red); font-size: 0.9rem; text-align: center; padding: 40px; }
+
         /* Responsive */
         @media (max-width: 900px) {
             body { padding: 12px; }
@@ -149,6 +190,7 @@
             .summary-card, .chart-card { border: 1px solid #ccc; }
             .summary-table thead th { background: #2c5282; }
             .section-header td { background: #e2e8f0; color: #1a202c !important; }
+            .live-badge { display: none; }
         }
     </style>
 </head>
@@ -158,60 +200,232 @@
             <h1>Mobile Home Movers - SEO Dashboard</h1>
             <div class="subtitle">localmovers.com/mobile-home-mover</div>
         </div>
-        <div class="date-badge" id="dateLabel">Loading...</div>
+        <div class="header-right">
+            <span class="live-badge" id="liveBadge" style="display:none">Live</span>
+            <div class="date-badge" id="dateLabel">Loading...</div>
+        </div>
+    </div>
+    <div class="last-updated" id="lastUpdated"></div>
+
+    <!-- Loading state -->
+    <div id="loadingState" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Fetching latest data from Google Sheets...</div>
     </div>
 
-    <!-- Two-column summary matching Daily Summary sheet -->
-    <div class="summary-grid">
-        <div class="summary-card">
-            <table class="summary-table" id="kpiTable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th id="kpiDate" style="text-align:right"></th>
-                        <th id="kpiChange" style="text-align:right"></th>
-                    </tr>
-                </thead>
-                <tbody id="kpiBody"></tbody>
-            </table>
+    <!-- Dashboard content (hidden until loaded) -->
+    <div id="dashboardContent" style="display:none">
+        <!-- Two-column summary matching Daily Summary sheet -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <table class="summary-table" id="kpiTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th id="kpiDate" style="text-align:right"></th>
+                            <th id="kpiChange" style="text-align:right"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="kpiBody"></tbody>
+                </table>
+            </div>
+            <div class="summary-card">
+                <table class="summary-table" id="cityTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th id="cityDate" style="text-align:right"></th>
+                            <th id="cityChange" style="text-align:right"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cityBody"></tbody>
+                </table>
+            </div>
         </div>
-        <div class="summary-card">
-            <table class="summary-table" id="cityTable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th id="cityDate" style="text-align:right"></th>
-                        <th id="cityChange" style="text-align:right"></th>
-                    </tr>
-                </thead>
-                <tbody id="cityBody"></tbody>
-            </table>
-        </div>
-    </div>
 
-    <!-- Trend Charts -->
-    <div class="charts-grid">
-        <div class="chart-card">
-            <h3>Impressions & Clicks Over Time</h3>
-            <canvas id="impressionsChart"></canvas>
+        <!-- Trend Charts -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Impressions & Clicks Over Time</h3>
+                <canvas id="impressionsChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Average Position Over Time</h3>
+                <canvas id="positionChart"></canvas>
+            </div>
         </div>
-        <div class="chart-card">
-            <h3>Average Position Over Time</h3>
-            <canvas id="positionChart"></canvas>
-        </div>
-    </div>
-    <div class="charts-grid">
-        <div class="chart-card">
-            <h3>Indexed vs Not Indexed URLs</h3>
-            <canvas id="indexChart"></canvas>
-        </div>
-        <div class="chart-card">
-            <h3>City Rankings (Lower = Better)</h3>
-            <canvas id="cityChart"></canvas>
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Indexed vs Not Indexed URLs</h3>
+                <canvas id="indexChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>City Rankings (Lower = Better)</h3>
+                <canvas id="cityChart"></canvas>
+            </div>
         </div>
     </div>
 
     <script>
+    // ============ GOOGLE SHEETS CONFIG ============
+    const SHEET_ID = '1B0PWzhPANx2wc4y6azyvsLZtLnkBFS-oud_lv3eknYs';
+    const SHEET_NAME = 'Summary Master';
+
+    // ============ GOOGLE SHEETS FETCHER ============
+    function getCellStr(cell) {
+        if (!cell) return '';
+        if (cell.f) return String(cell.f);
+        if (cell.v !== null && cell.v !== undefined) return String(cell.v);
+        return '';
+    }
+
+    function getCellNum(cell) {
+        if (!cell) return 0;
+        if (typeof cell.v === 'number') return cell.v;
+        const str = getCellStr(cell);
+        const match = str.match(/([\d.]+)/);
+        return match ? parseFloat(match[0]) : 0;
+    }
+
+    function convertDate(mmddyyyy) {
+        // "03/26/2026" or "3/26/2026" -> "2026-03-26"
+        if (!mmddyyyy) return '';
+        const parts = mmddyyyy.trim().split('/');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+        }
+        return mmddyyyy;
+    }
+
+    function extractDateFromChangeStr(str) {
+        // "Change from 03/25/2026" -> "03/25/2026"
+        if (!str) return '';
+        const match = str.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+        return match ? match[1] : '';
+    }
+
+    function newSection(dateISO) {
+        return {
+            date: dateISO,
+            totalUrls: 0, indexed: 0, indexedPct: 0, notIndexed: 0,
+            impressions: 0, clicks: 0, avgPosition: 0,
+            urlsInTop3: 0, citiesInTop20: 0, citiesAvgRank: 0,
+            deindexedCount: 0, deindexedUrls: [], cities: {},
+            _changeFrom: '' // raw "Change from" date string for chaining
+        };
+    }
+
+    async function fetchFromGoogleSheets() {
+        // Use default headers=1 so the first row becomes column labels
+        // Column C label = latest date, Column D label = "Change from ..."
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+        const resp = await fetch(url);
+        const text = await resp.text();
+        const jsonStr = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]+)\)/);
+        if (!jsonStr) throw new Error('Failed to parse Google Sheets response');
+        const data = JSON.parse(jsonStr[1]);
+        if (data.status !== 'ok') throw new Error('Google Sheets query failed: ' + (data.errors?.[0]?.message || 'unknown'));
+
+        const cols = data.table.cols;
+        // The latest section's date is in column C's label (e.g. "03/26/2026")
+        const latestDateRaw = cols[2]?.label || '';
+        const latestDateISO = convertDate(latestDateRaw);
+        // The "Change from" date for the latest section
+        const latestChangeFrom = extractDateFromChangeStr(cols[3]?.label || '');
+
+        return parseSheetSections(data.table.rows || [], latestDateISO, latestChangeFrom);
+    }
+
+    function parseSheetSections(rows, firstDateISO, firstChangeFrom) {
+        // With headers=1, the first "Date" row is consumed as headers.
+        // Data rows start with the first section's metrics immediately.
+        // Subsequent sections start with "Date" rows in the data.
+
+        const sections = [];
+        // Start the first section with the date from column headers
+        let current = newSection(firstDateISO);
+        current._changeFrom = firstChangeFrom;
+
+        for (const row of rows) {
+            const cells = row.c || [];
+            const label = getCellStr(cells[1]).trim();
+
+            // Detect new date section
+            if (label === 'Date') {
+                if (current) sections.push(current);
+                // This section's date = the PREVIOUS section's "Change from" date
+                const prevChangeFrom = current._changeFrom;
+                const myChangeFrom = extractDateFromChangeStr(getCellStr(cells[3]));
+                current = newSection(convertDate(prevChangeFrom));
+                current._changeFrom = myChangeFrom;
+                continue;
+            }
+
+            if (!current) continue;
+
+            // Skip section headers and blank rows
+            if (label === 'Index Drop-Offs' || label === '') continue;
+
+            // Deindexed URL rows
+            const colA = getCellStr(cells[0]).trim();
+            if (colA.startsWith('http')) { current.deindexedUrls.push(colA); continue; }
+            if (label.startsWith('http')) { current.deindexedUrls.push(label); continue; }
+
+            const numVal = getCellNum(cells[2]);
+
+            // Map metric labels to properties
+            if (label.includes('Total URLs')) {
+                current.totalUrls = numVal;
+            } else if (label.includes('Indexed') && label.includes('movers')) {
+                // Value is null in gviz (text in number column), so we calculate it later
+                // But try to read it anyway in case it's available
+                current.indexed = numVal;
+            } else if (label.includes('Not indexed')) {
+                current.notIndexed = numVal;
+            } else if (label.includes('Total Impressions')) {
+                current.impressions = numVal;
+            } else if (label.includes('Total Clicks')) {
+                current.clicks = numVal;
+            } else if (label === 'Average Position') {
+                current.avgPosition = numVal;
+            } else if (label.includes('URLs in Top 3')) {
+                current.urlsInTop3 = numVal;
+            } else if (label.includes('Cities in Top 20')) {
+                current.citiesInTop20 = numVal;
+            } else if (label.includes('Cities Average Rank')) {
+                current.citiesAvgRank = numVal;
+            } else if (label.includes('Count of Deindexed')) {
+                current.deindexedCount = numVal;
+            } else if (label.includes('Avg Pos')) {
+                const cityName = label.replace(/\s*Avg\s*Pos\s*$/i, '').trim();
+                current.cities[cityName] = numVal;
+            }
+        }
+
+        if (current) sections.push(current);
+
+        // Post-processing: calculate indexed if it was null (text in number column)
+        sections.forEach(s => {
+            if (s.indexed === 0 && s.totalUrls > 0 && s.notIndexed >= 0) {
+                s.indexed = s.totalUrls - s.notIndexed;
+            }
+            if (s.totalUrls > 0 && s.indexed > 0) {
+                s.indexedPct = Math.round(s.indexed / s.totalUrls * 1000) / 10;
+            }
+            // Clean up internal field
+            delete s._changeFrom;
+        });
+
+        // Filter out sections with empty/invalid dates
+        const valid = sections.filter(s => s.date && s.date.length >= 8 && s.totalUrls > 0);
+
+        // Sort ascending by date (oldest first) for chart display
+        valid.sort((a, b) => a.date.localeCompare(b.date));
+
+        return { dailySummaries: valid };
+    }
+
+    // ============ DASHBOARD RENDERING ============
     function fmtDate(dateStr) {
         return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
     }
@@ -230,16 +444,26 @@
         return `<td class="metric-change ${cls}">${arrow} ${display}</td>`;
     }
 
-    async function loadDashboard() {
-        const resp = await fetch('data.json');
-        const data = await resp.json();
+    function renderDashboard(data) {
         const days = data.dailySummaries;
+        if (!days || days.length === 0) {
+            document.getElementById('loadingState').innerHTML = '<div class="error-msg">No data found in the spreadsheet.</div>';
+            return;
+        }
+
         const latest = days[days.length - 1];
-        const prev = days[days.length - 2];
+        const prev = days.length >= 2 ? days[days.length - 2] : latest;
+
+        // Show content, hide loading
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('dashboardContent').style.display = 'block';
+        document.getElementById('liveBadge').style.display = 'inline-block';
 
         // Header
         document.getElementById('dateLabel').textContent =
             `Report: ${new Date(latest.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+        document.getElementById('lastUpdated').textContent =
+            `Auto-updated from Google Sheets \u2022 Last refresh: ${new Date().toLocaleString()}`;
 
         // Left table headers
         document.getElementById('kpiDate').textContent = fmtDate(latest.date);
@@ -287,28 +511,20 @@
         `;
         kpiBody.appendChild(deindexRow);
 
-        if (latest.deindexedUrls) {
+        if (latest.deindexedUrls && latest.deindexedUrls.length > 0) {
             latest.deindexedUrls.forEach(url => {
                 const tr = document.createElement('tr');
                 tr.className = 'deindexed-url';
-                const slug = url.split('/').pop().replace(/-/g, ' ');
                 tr.innerHTML = `<td colspan="3"><a href="${url}" target="_blank">${url}</a></td>`;
                 kpiBody.appendChild(tr);
             });
         }
 
-        // Right table: City positions
+        // Right table: City positions (skip cities with rank 0)
         const cityBody = document.getElementById('cityBody');
-        const allCities = [
-            'Orlando', 'San Antonio', 'Houston', 'Fayetteville',
-            'Baton Rouge', 'Texarkana', 'Shreveport', 'Lafayette',
-            'Lake Charles', 'Seattle', 'Oklahoma City', 'Alexandria',
-            'Youngsville', 'Los Angeles', 'Albuquerque'
-        ];
+        const cityEntries = Object.entries(latest.cities).filter(([, v]) => v > 0);
 
-        allCities.forEach(city => {
-            const pos = latest.cities[city] !== undefined ? latest.cities[city] : 0;
-            if (pos === 0) return; // Skip cities with no ranking
+        cityEntries.forEach(([city, pos]) => {
             const prevPos = prev.cities && prev.cities[city] !== undefined ? prev.cities[city] : 0;
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -402,7 +618,7 @@
             }
         });
 
-        // City Rankings bar
+        // City Rankings bar (only cities with position > 0)
         const activeCities = Object.entries(latest.cities).filter(([, v]) => v > 0);
         new Chart(document.getElementById('cityChart'), {
             type: 'bar',
@@ -425,6 +641,31 @@
                 }
             }
         });
+    }
+
+    // ============ MAIN ============
+    async function loadDashboard() {
+        try {
+            console.log('Fetching data from Google Sheets...');
+            const data = await fetchFromGoogleSheets();
+            console.log(`Loaded ${data.dailySummaries.length} date sections from Google Sheets`);
+            renderDashboard(data);
+        } catch (err) {
+            console.error('Google Sheets fetch failed:', err);
+            // Fallback to local data.json
+            try {
+                console.log('Falling back to local data.json...');
+                const resp = await fetch('data.json');
+                const data = await resp.json();
+                renderDashboard(data);
+                document.getElementById('lastUpdated').textContent =
+                    'Using cached data (Google Sheets unavailable)';
+                document.getElementById('liveBadge').style.display = 'none';
+            } catch (fallbackErr) {
+                document.getElementById('loadingState').innerHTML =
+                    `<div class="error-msg">Failed to load data. Please check that the Google Sheet is shared publicly.<br><br>Error: ${err.message}</div>`;
+            }
+        }
     }
 
     loadDashboard();
