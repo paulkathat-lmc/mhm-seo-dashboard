@@ -168,6 +168,15 @@
             color: var(--muted);
             font-weight: 500;
         }
+        .company-header-label {
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 6px 16px 2px 28px !important;
+            border-bottom: none !important;
+        }
         .expand-all-btn {
             background: var(--header-bg);
             color: var(--muted);
@@ -456,7 +465,9 @@
             } else if (label.match(/^\s*→\s*/)) {
                 // Company sub-row beneath a city
                 const companySlug = label.replace(/^\s*→\s*/, '').trim();
-                const companyName = companySlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                // Extract just the last path segment for display name
+                const namePart = companySlug.includes('/') ? companySlug.split('/').pop() : companySlug;
+                const companyName = namePart.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                 if (current._lastCity && current.cities[current._lastCity]) {
                     current.cities[current._lastCity].companies.push({ name: companyName, slug: companySlug, position: numVal });
                 }
@@ -613,13 +624,22 @@
 
             // Top 3 companies sub-rows (hidden until accordion opened)
             const companyRows = [];
+            if (companies.length > 0) {
+                const hdr = document.createElement('tr');
+                hdr.className = 'company-row company-section-header';
+                hdr.innerHTML = `<td colspan="3" class="company-header-label">Top 3 Companies</td>`;
+                cityBody.appendChild(hdr);
+                companyRows.push(hdr);
+            }
             companies.forEach(comp => {
                 const ctr = document.createElement('tr');
                 ctr.className = 'company-row';
                 const slug = comp.slug;
-                const url = `https://www.localmovers.com/mobile-home-mover/${slug}`;
+                // slug may be a full URL or just a path segment
+                const url = slug.startsWith('http') ? slug : `https://www.localmovers.com/mobile-home-mover/${slug}`;
+                const displayName = comp.name;
                 ctr.innerHTML = `
-                    <td class="company-name"><a href="${url}" target="_blank">${slug}</a></td>
+                    <td class="company-name"><a href="${url}" target="_blank">${displayName}</a></td>
                     <td class="metric-value company-pos">${comp.position.toFixed(2)}</td>
                     <td></td>
                 `;
