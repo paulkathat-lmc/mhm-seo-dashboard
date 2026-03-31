@@ -128,16 +128,42 @@
             padding: 8px 16px !important;
         }
 
+        .city-accordion {
+            cursor: pointer;
+            user-select: none;
+        }
+        .city-accordion .metric-name::before {
+            content: '\25B6';
+            display: inline-block;
+            font-size: 0.6rem;
+            margin-right: 6px;
+            transition: transform 0.2s;
+            vertical-align: middle;
+        }
+        .city-accordion.open .metric-name::before {
+            transform: rotate(90deg);
+        }
+        .company-row {
+            display: none;
+        }
+        .company-row.visible {
+            display: table-row;
+        }
         .company-row td {
-            padding: 4px 16px !important;
+            padding: 4px 16px 4px 28px !important;
             font-size: 0.78rem;
             border-bottom: 1px solid rgba(51,65,85,0.4);
         }
         .company-name {
             color: var(--muted);
-            padding-left: 32px !important;
             font-weight: 400;
+            word-break: break-all;
         }
+        .company-name a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .company-name a:hover { text-decoration: underline; }
         .company-pos {
             color: var(--muted);
             font-weight: 500;
@@ -420,7 +446,7 @@
                 const companySlug = label.replace(/^\s*→\s*/, '').trim();
                 const companyName = companySlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                 if (current._lastCity && current.cities[current._lastCity]) {
-                    current.cities[current._lastCity].companies.push({ name: companyName, position: numVal });
+                    current.cities[current._lastCity].companies.push({ name: companyName, slug: companySlug, position: numVal });
                 }
             }
         }
@@ -565,6 +591,7 @@
             const prevVal = prev.cities && prev.cities[city] !== undefined ? prev.cities[city] : 0;
             const prevPos = getCityPosition(prevVal);
             const tr = document.createElement('tr');
+            if (companies.length > 0) tr.className = 'city-accordion';
             tr.innerHTML = `
                 <td class="metric-name">${city} Avg Pos</td>
                 <td class="metric-value">${pos.toFixed(2)}</td>
@@ -572,17 +599,28 @@
             `;
             cityBody.appendChild(tr);
 
-            // Top 3 companies sub-rows
+            // Top 3 companies sub-rows (hidden until accordion opened)
+            const companyRows = [];
             companies.forEach(comp => {
                 const ctr = document.createElement('tr');
                 ctr.className = 'company-row';
+                const slug = comp.slug;
+                const url = `https://www.localmovers.com/mobile-home-mover/${slug}`;
                 ctr.innerHTML = `
-                    <td class="company-name">\u2192 ${comp.name}</td>
+                    <td class="company-name"><a href="${url}" target="_blank">${slug}</a></td>
                     <td class="metric-value company-pos">${comp.position.toFixed(2)}</td>
                     <td></td>
                 `;
                 cityBody.appendChild(ctr);
+                companyRows.push(ctr);
             });
+
+            if (companies.length > 0) {
+                tr.addEventListener('click', () => {
+                    tr.classList.toggle('open');
+                    companyRows.forEach(r => r.classList.toggle('visible'));
+                });
+            }
         });
 
         // ============ CHARTS ============
