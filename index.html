@@ -168,6 +168,18 @@
             color: var(--muted);
             font-weight: 500;
         }
+        .expand-all-btn {
+            background: var(--header-bg);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            float: right;
+            margin: 4px 8px;
+        }
+        .expand-all-btn:hover { color: var(--text); border-color: var(--accent); }
 
         .deindexed-url td {
             padding: 6px 16px !important;
@@ -274,7 +286,7 @@
                 <table class="summary-table" id="cityTable">
                     <thead>
                         <tr>
-                            <th>Date</th>
+                            <th>Date <button class="expand-all-btn" id="expandAllBtn">Expand All</button></th>
                             <th id="cityDate" style="text-align:right"></th>
                             <th id="cityChange" style="text-align:right"></th>
                         </tr>
@@ -621,6 +633,23 @@
                     companyRows.forEach(r => r.classList.toggle('visible'));
                 });
             }
+        });
+
+        // Expand All / Collapse All toggle
+        const expandBtn = document.getElementById('expandAllBtn');
+        let allExpanded = false;
+        expandBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            allExpanded = !allExpanded;
+            expandBtn.textContent = allExpanded ? 'Collapse All' : 'Expand All';
+            cityBody.querySelectorAll('.city-accordion').forEach(row => {
+                if (allExpanded) row.classList.add('open');
+                else row.classList.remove('open');
+            });
+            cityBody.querySelectorAll('.company-row').forEach(row => {
+                if (allExpanded) row.classList.add('visible');
+                else row.classList.remove('visible');
+            });
         });
 
         // ============ CHARTS ============
