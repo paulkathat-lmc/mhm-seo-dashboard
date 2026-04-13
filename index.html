@@ -164,6 +164,11 @@
             text-decoration: none;
         }
         .company-name a:hover { text-decoration: underline; }
+        .city-link {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .city-link:hover { text-decoration: underline; }
         .company-pos {
             color: var(--muted);
             font-weight: 500;
@@ -615,8 +620,10 @@
             const prevPos = getCityPosition(prevVal);
             const tr = document.createElement('tr');
             if (companies.length > 0) tr.className = 'city-accordion';
+            const citySlug = city.toLowerCase().replace(/\s+/g, '-');
+            const cityUrl = `https://www.localmovers.com/mobile-home-mover/${citySlug}`;
             tr.innerHTML = `
-                <td class="metric-name">${city} Avg Pos</td>
+                <td class="metric-name"><a href="${cityUrl}" target="_blank" class="city-link">${city}</a> Avg Pos</td>
                 <td class="metric-value">${pos.toFixed(2)}</td>
                 ${prevPos > 0 ? changeCell(pos, prevPos, true) : `<td class="metric-change change-neutral">\u2194\ufe0f</td>`}
             `;
