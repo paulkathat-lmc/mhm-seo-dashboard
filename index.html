@@ -394,7 +394,8 @@
             urlsInTop3: 0, citiesInTop20: 0, citiesAvgRank: 0,
             deindexedCount: 0, deindexedUrls: [], cities: {},
             cityPages: { totalUrls: 0, indexed: 0, indexedPct: 0, notIndexed: 0,
-                         impressions: 0, clicks: 0, avgPosition: 0, top3: 0, top20: 0 },
+                         impressions: 0, clicks: 0, avgPosition: 0, top3: 0, top20: 0,
+                         notIndexedUrls: [] },
             _changeFrom: '' // raw "Change from" date string for chaining
         };
     }
@@ -450,10 +451,17 @@
             // Skip section headers and blank rows
             if (label === 'Index Drop-Offs' || label === 'Mobile Home Movers Pages' || label === '') continue;
 
-            // Deindexed URL rows
+            // URL rows — route by prefix
             const colA = getCellStr(cells[0]).trim();
-            if (colA.startsWith('http')) { current.deindexedUrls.push(colA); continue; }
-            if (label.startsWith('http')) { current.deindexedUrls.push(label); continue; }
+            const urlCandidate = colA.startsWith('http') ? colA : label.startsWith('http') ? label : null;
+            if (urlCandidate) {
+                if (urlCandidate.includes('/mobile-home-movers/')) {
+                    current.cityPages.notIndexedUrls.push(urlCandidate);
+                } else {
+                    current.deindexedUrls.push(urlCandidate);
+                }
+                continue;
+            }
 
             const numVal = getCellNum(cells[2]);
 
@@ -676,6 +684,15 @@
             `;
             cityPagesBody.appendChild(tr);
         });
+
+        if (cp.notIndexedUrls && cp.notIndexedUrls.length > 0) {
+            cp.notIndexedUrls.forEach(url => {
+                const tr = document.createElement('tr');
+                tr.className = 'deindexed-url';
+                tr.innerHTML = `<td colspan="3"><a href="${url}" target="_blank">${url}</a></td>`;
+                cityPagesBody.appendChild(tr);
+            });
+        }
 
         // Right table: City positions (skip cities with rank 0)
         const cityBody = document.getElementById('cityBody');
