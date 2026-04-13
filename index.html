@@ -65,10 +65,10 @@
             font-size: 0.75rem;
         }
 
-        /* Two-column summary layout matching the Google Sheet */
+        /* Three-column summary layout */
         .summary-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -247,6 +247,9 @@
         .error-msg { color: var(--red); font-size: 0.9rem; text-align: center; padding: 40px; }
 
         /* Responsive */
+        @media (max-width: 1200px) {
+            .summary-grid { grid-template-columns: 1fr 1fr; }
+        }
         @media (max-width: 900px) {
             body { padding: 12px; }
             .summary-grid { grid-template-columns: 1fr; }
@@ -306,6 +309,18 @@
                         </tr>
                     </thead>
                     <tbody id="cityBody"></tbody>
+                </table>
+            </div>
+            <div class="summary-card">
+                <table class="summary-table" id="cityPagesTable">
+                    <thead>
+                        <tr>
+                            <th>Mobile Home Movers Pages</th>
+                            <th id="cityPagesDate" style="text-align:right"></th>
+                            <th id="cityPagesChange" style="text-align:right"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cityPagesBody"></tbody>
                 </table>
             </div>
         </div>
@@ -378,6 +393,8 @@
             impressions: 0, clicks: 0, avgPosition: 0,
             urlsInTop3: 0, citiesInTop20: 0, citiesAvgRank: 0,
             deindexedCount: 0, deindexedUrls: [], cities: {},
+            cityPages: { totalUrls: 0, indexed: 0, indexedPct: 0, notIndexed: 0,
+                         impressions: 0, clicks: 0, avgPosition: 0, top3: 0, top20: 0 },
             _changeFrom: '' // raw "Change from" date string for chaining
         };
     }
@@ -431,7 +448,7 @@
             if (!current) continue;
 
             // Skip section headers and blank rows
-            if (label === 'Index Drop-Offs' || label === '') continue;
+            if (label === 'Index Drop-Offs' || label === 'Mobile Home Movers Pages' || label === '') continue;
 
             // Deindexed URL rows
             const colA = getCellStr(cells[0]).trim();
@@ -463,6 +480,22 @@
                 current.citiesAvgRank = numVal;
             } else if (label.includes('Count of Deindexed')) {
                 current.deindexedCount = numVal;
+            } else if (label === 'Total City Pages') {
+                current.cityPages.totalUrls = numVal;
+            } else if (label === 'Indexed (city pages)') {
+                current.cityPages.indexed = numVal;
+            } else if (label === 'Not Indexed (city pages)') {
+                current.cityPages.notIndexed = numVal;
+            } else if (label === 'Impressions (city pages)') {
+                current.cityPages.impressions = numVal;
+            } else if (label === 'Clicks (city pages)') {
+                current.cityPages.clicks = numVal;
+            } else if (label === 'Avg Position (city pages)') {
+                current.cityPages.avgPosition = numVal;
+            } else if (label === 'Top 3 City Pages') {
+                current.cityPages.top3 = numVal;
+            } else if (label === 'Top 20 City Pages') {
+                current.cityPages.top20 = numVal;
             } else if (label.includes('Avg Pos')) {
                 const cityName = label.replace(/\s*Avg\s*Pos\s*$/i, '').trim();
                 current.cities[cityName] = { position: numVal, companies: [] };
@@ -488,6 +521,13 @@
             }
             if (s.totalUrls > 0 && s.indexed > 0) {
                 s.indexedPct = Math.round(s.indexed / s.totalUrls * 1000) / 10;
+            }
+            // City pages indexed calc
+            if (s.cityPages.indexed === 0 && s.cityPages.totalUrls > 0 && s.cityPages.notIndexed >= 0) {
+                s.cityPages.indexed = s.cityPages.totalUrls - s.cityPages.notIndexed;
+            }
+            if (s.cityPages.totalUrls > 0 && s.cityPages.indexed > 0) {
+                s.cityPages.indexedPct = Math.round(s.cityPages.indexed / s.cityPages.totalUrls * 1000) / 10;
             }
             // Clean up internal fields
             delete s._changeFrom;
@@ -522,7 +562,7 @@
     function changeCell(current, previous, invert) {
         const diff = current - previous;
         if (Math.abs(diff) < 0.005) return `<td class="metric-change change-neutral">\u2194\ufe0f</td>`;
-        const arrow = diff > 0 ? '\u2191' : '\u2193';
+        const arrow = (diff > 0) !== invert ? '\u2191' : '\u2193';
         let cls;
         if (invert) {
             cls = diff < 0 ? 'change-down-good' : 'change-up-bad';
@@ -559,6 +599,8 @@
         document.getElementById('kpiChange').textContent = `Change from ${fmtDate(prev.date)}`;
         document.getElementById('cityDate').textContent = fmtDate(latest.date);
         document.getElementById('cityChange').textContent = `Change from ${fmtDate(prev.date)}`;
+        document.getElementById('cityPagesDate').textContent = fmtDate(latest.date);
+        document.getElementById('cityPagesChange').textContent = `Change from ${fmtDate(prev.date)}`;
 
         // Left table: KPI rows
         const kpiRows = [
@@ -608,6 +650,32 @@
                 kpiBody.appendChild(tr);
             });
         }
+
+        // Mobile Home Movers Pages table
+        const cityPagesBody = document.getElementById('cityPagesBody');
+        const cp = latest.cityPages;
+        const cpp = prev.cityPages;
+        const cityPageRows = [
+            { name: 'Total City Pages', val: cp.totalUrls, prev: cpp.totalUrls },
+            { name: 'Indexed', val: `${cp.indexed} (${cp.indexedPct}%)`, rawVal: cp.indexed, rawPrev: cpp.indexed },
+            { name: 'Not Indexed', val: cp.notIndexed, prev: cpp.notIndexed, invert: true },
+            { name: 'Total Impressions', val: cp.impressions.toLocaleString(), rawVal: cp.impressions, rawPrev: cpp.impressions },
+            { name: 'Total Clicks', val: cp.clicks.toLocaleString(), rawVal: cp.clicks, rawPrev: cpp.clicks },
+            { name: 'Average Position', val: cp.avgPosition.toFixed(2), rawVal: cp.avgPosition, rawPrev: cpp.avgPosition, invert: true },
+            { name: 'Top 3 URLs', val: cp.top3, prev: cpp.top3 },
+            { name: 'Top 20 URLs', val: cp.top20, prev: cpp.top20 },
+        ];
+        cityPageRows.forEach(row => {
+            const rv = row.rawVal !== undefined ? row.rawVal : row.val;
+            const rp = row.rawPrev !== undefined ? row.rawPrev : row.prev;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="metric-name">${row.name}</td>
+                <td class="metric-value">${row.val}</td>
+                ${changeCell(rv, rp, row.invert)}
+            `;
+            cityPagesBody.appendChild(tr);
+        });
 
         // Right table: City positions (skip cities with rank 0)
         const cityBody = document.getElementById('cityBody');
