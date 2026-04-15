@@ -686,6 +686,10 @@
         });
 
         if (cp.notIndexedUrls && cp.notIndexedUrls.length > 0) {
+            const headerTr = document.createElement('tr');
+            headerTr.className = 'section-header';
+            headerTr.innerHTML = `<td colspan="3" style="padding-top:10px;font-weight:600;color:var(--text-secondary);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Not Indexed City Pages</td>`;
+            cityPagesBody.appendChild(headerTr);
             cp.notIndexedUrls.forEach(url => {
                 const tr = document.createElement('tr');
                 tr.className = 'deindexed-url';
