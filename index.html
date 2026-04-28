@@ -570,7 +570,7 @@
     function changeCell(current, previous, invert) {
         const diff = current - previous;
         if (Math.abs(diff) < 0.005) return `<td class="metric-change change-neutral">\u2194\ufe0f</td>`;
-        const arrow = (diff > 0) !== invert ? '\u2191' : '\u2193';
+        const arrow = diff > 0 ? '\u2191' : '\u2193';
         let cls;
         if (invert) {
             cls = diff < 0 ? 'change-down-good' : 'change-up-bad';
